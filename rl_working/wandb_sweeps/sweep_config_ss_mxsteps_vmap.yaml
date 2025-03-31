@@ -1,0 +1,60 @@
+program: ppo_vmap_hyp.py
+project: 
+entity: 
+method: grid
+parameters:
+  env:
+    values: ["simple_stirap"]
+  sigma_amp:
+    values: [0]
+  num_envs:
+    values: [16]
+  num_minibatches:
+    values: [4]
+  num_updates:
+    values: [16000]
+  sigma_phase:
+    values: [0]
+  fix_endpoints_ss:
+    values: [1]
+  omega_ss:
+    values: [20]
+  delta_ss:
+    values: [20]
+  area_pen_ss:
+    values: [0.0]
+  smoothness_pen_ss:
+    values: [0.001]
+  smoothness_pen_ss_det:
+    values: [0.001]
+  kernel_std_amp:
+    values: [5]
+  kernel_std_freq:
+    values: [5]
+  final_state_zero_ss:
+    values: [0]
+  smoothness_cutoff_freq:
+    values: [8]
+  smoothness_calc_amp:
+    values: ["second_derivative"]
+  smoothness_calc_det:
+    values: ["second_derivative"]
+  final_state_zero_ss:
+    values: [0]
+  noise:
+    values: ["None"]
+  mx_step_penalty:
+    values: [0]
+  mxstep_solver:
+    values: [200,400,600,800,1000]
+
+  lr_vmap:
+    values: ["0.001,0.00075,0.00025,0.0001"]  
+  max_grad_norm_vmap:
+    values: ["0.3,0.4,0.5"]
+  clip_eps_vmap:
+    values: [ "0.1,0.15,0.2"]  
+  ent_coef_vmap:
+    values: ["0"]
+  anneal_lr:
+    values: [0]

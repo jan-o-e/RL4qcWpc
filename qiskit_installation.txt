@@ -1,0 +1,11 @@
+conda create --name qiskit
+conda activate qiskit
+conda install cuda=12.3 cudnn==8.9.7.29 python==3.10
+pip install --upgrade "jax[cuda12_local]==0.4.25" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+
+from jax.lib import xla_bridge
+print(xla_bridge.get_backend().platform) 
+# (should print "gpu")
+
+pip install qiskit-dynamics
+pip install gymnax evosax distrax optax flax numpy brax wandb flashbax diffrax
