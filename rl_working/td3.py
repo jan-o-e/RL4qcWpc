@@ -944,6 +944,6 @@ if __name__ == "__main__":
 
     #ADD YOUR OWN WAND CONFIG HERE
     if config["LOG_WAND"]:
-        wandb.init(project="rlqc-v2", entity="rl4qphys", config=config)
+        wandb.init(project="", entity="", config=config)
 
     outs = jax.block_until_ready(single_train(rng))

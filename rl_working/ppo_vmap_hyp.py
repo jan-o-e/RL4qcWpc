@@ -120,7 +120,6 @@ class CombinedActorCritic(nn.Module):
     Actor and Critic Class with combined Feed-forward Neural Network
     """
 
-    # TODO Tim: is this passed correctly upon class instantiation?
     action_dim: Sequence[int]
     activation: str = "tanh"
     layer_size: int = 128
