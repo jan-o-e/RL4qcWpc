@@ -12,7 +12,7 @@ Using Conda:
 
 ```sh
 export CONPREFIX=qiskit
-conda create --prefix $CONPREFIX python=3.9 -y
+conda create --prefix $CONPREFIX python=3.10 -y
 conda activate $CONPREFIX
 ```
 
@@ -33,7 +33,7 @@ pip install qiskit-dynamics gymnax evosax distrax optax flax numpy brax wandb fl
 
 ## Overview
 
-The implementation is contained in the `rl_working` directory. Our algorithm implementation is based on the JAX-based framework [PureJAX-RL](https://github.com/luchris429/purejax-rl). We provide multiple reinforcement learning implementations:
+The implementation is contained in the `rl_working` directory. Our PPO algorithm implementation is based on the JAX-based framework [PureJAX-RL](https://github.com/luchris429/purejax-rl). The other implementations follow the structure of [CleanRL](https://github.com/vwxyzjn/cleanrl). We provide the following RL implementations:
 
 - **Proximal Policy Optimization (PPO):**
   - `ppo_vmap_hyp.py`: PPO with hyperparameter vectorization
@@ -41,7 +41,7 @@ The implementation is contained in the `rl_working` directory. Our algorithm imp
 - **Twin Delayed Deep Deterministic Policy Gradient (TD3):** `td3.py`
 - **Deep Deterministic Policy Gradient (DDPG):** `ddpg_buffer.py`
 
-These implementations closely follow the structure of [CleanRL](https://github.com/vwxyzjn/cleanrl). There is currently a bug in td3 and ddpg_buffer which means they only run on GPUs due to dtype issues on CPUs. This will be fixed for the public release.
+There is currently a bug in td3 and ddpg_buffer which means they only run on GPUs due to dtype issues on CPUs. This will be fixed for the public release.
 
 ### Environments
 
