@@ -41,8 +41,6 @@ The implementation is contained in the `rl_working` directory. Our PPO algorithm
 - **Twin Delayed Deep Deterministic Policy Gradient (TD3):** `td3.py`
 - **Deep Deterministic Policy Gradient (DDPG):** `ddpg_buffer.py`
 
-There is currently a bug in td3 and ddpg_buffer which means they only run on GPUs due to dtype issues on CPUs. This will be fixed for the public release.
-
 ### Environments
 
 Our quantum control environments are located in the `envs` directory, with support for:
