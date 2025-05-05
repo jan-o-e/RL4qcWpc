@@ -1,5 +1,7 @@
 # RL4qcWpc
 
+[![Generic badge](https://img.shields.io/badge/arXiv-2305.04899-<COLOR>.svg)](https://arxiv.org/abs/2501.14372)
+
 **Reinforcement Learning for Quantum Control with Physical Constraints**
 
 ## Installation
@@ -60,3 +62,22 @@ For quick reproducibility, we provide example Jupyter notebooks in the `notebook
 We use **Weights & Biases (W&B)** for experiment tracking. To enable logging, configure your W&B project and entity IDs. Basic local logging is also available within the notebooks for convenience.
 
 ---
+
+## Final Notes
+
+Thank you for your interest in **RL4qcWpc**!  
+We welcome all contributions — feel free to submit issues, feature requests, or pull requests.  
+If you use this codebase or build upon it, please cite our paper:
+
+### Citation
+
+```bibtex
+@misc{ernst2025reinforcementlearningquantumcontrol,
+      title={Reinforcement Learning for Quantum Control under Physical Constraints}, 
+      author={Jan Ole Ernst and Aniket Chatterjee and Tim Franzmeyer and Axel Kuhn},
+      year={2025},
+      eprint={2501.14372},
+      archivePrefix={arXiv},
+      primaryClass={quant-ph},
+      url={https://arxiv.org/abs/2501.14372}, 
+}
