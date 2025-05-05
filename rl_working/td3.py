@@ -49,12 +49,14 @@ if ("cuda" in str(jax.devices())) or ("Cuda" in str(jax.devices())):
     print("Connected to a GPU")
     processor = "gpu"
     default_dtype = jnp.float32
+    default_int = jnp.int32
 else:
     jax.config.update("jax_platform_name", "cpu")
     print("Not connected to a GPU")
     jax.config.update("jax_enable_x64", True)
     processor = "cpu"
     default_dtype = jnp.float64
+    default_int = jnp.int64
 
 envs_class_dict = {
     "simple_stirap": SimpleStirap,
@@ -146,15 +148,15 @@ class ReplayBufferState:
 def init_replay_buffer(buffer_size: int, obs_shape: tuple,
                        action_shape: tuple) -> ReplayBufferState:
     return ReplayBufferState(obs=jnp.zeros((buffer_size, ) + obs_shape,
-                                           dtype=jnp.float32),
+                                           dtype=default_dtype),
                              actions=jnp.zeros((buffer_size, ) + action_shape,
-                                               dtype=jnp.float32),
+                                               dtype=default_dtype),
                              rewards=jnp.zeros((buffer_size, ),
-                                               dtype=jnp.float32),
+                                               dtype=default_dtype),
                              next_obs=jnp.zeros((buffer_size, ) + obs_shape,
-                                                dtype=jnp.float32),
+                                                dtype=default_dtype),
                              dones=jnp.zeros((buffer_size, ), dtype=jnp.bool_),
-                             position=jnp.array(0, dtype=jnp.int32),
+                             position=jnp.array(0, dtype=default_int),
                              full=jnp.array(False, dtype=jnp.bool_),
                              size=buffer_size)
 
@@ -304,6 +306,7 @@ def td3_make_train(config):
             buffer_state=buffer_state)
 
         def _update_step(runner_state, unused):
+
             def _env_step(runner_state, unused):
                 train_state = runner_state
                 rng = train_state.rng
@@ -474,6 +477,7 @@ def td3_make_train(config):
 
                 def callback(infos):
                     info, loss_info, step = infos
+                    critic1_loss, critic2_loss, actor_loss = loss_info
                     timesteps = (info["timestep"][info["returned_episode"]] *
                                  config["NUM_ENVS"])
                     if step % config["LOG_FREQ"] != 0:
@@ -493,10 +497,9 @@ def td3_make_train(config):
                         f"max_fidelity": max_fidelity,
                         f"min_fidelity": min_fidelity,
                         f"std_fidelity": std_fidelity,
-                        f"total_loss": jnp.mean(jnp.ravel(loss_info[0])),
-                        f"value_loss": jnp.mean(jnp.ravel(loss_info[1][0])),
-                        f"actor_loss": jnp.mean(jnp.ravel(loss_info[1][1])),
-                        f"entropy": jnp.mean(jnp.ravel(loss_info[1][2])),
+                        f"critic1_loss": jnp.mean(critic1_loss),
+                        f"critic2_loss": jnp.mean(critic2_loss),
+                        f"actor_loss": jnp.mean(actor_loss),
                     }
 
                     if (wandb.run and timestep %

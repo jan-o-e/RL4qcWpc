@@ -1,23 +1,21 @@
 from jax.lib import xla_bridge
-
 print("Platform used: ", xla_bridge.get_backend().platform)
 
 import time
-import jax
 import wandb
 import os
 import sys
 from functools import partial
+from typing import NamedTuple, Sequence, Tuple, Optional
+import pickle
+import matplotlib.pyplot as plt
+import argparse
 
 parent_dir = os.path.abspath(os.path.join(os.getcwd(), ".."))
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
-sys.path.append(os.path.join(os.path.dirname(__file__), 'envs'))
-print(jax.devices())
-jax.config.update("jax_default_device", jax.devices()[0])
-print("JaX backend: ", jax.default_backend())
-
+import jax
 import jax.numpy as jnp
 import numpy as np
 from jax import jit, config, vmap, block_until_ready
@@ -25,14 +23,16 @@ from flax import struct
 import flax.linen as nn
 import optax
 from flax.linen.initializers import constant, orthogonal
-from typing import NamedTuple, Sequence, Tuple, Optional
 from flax.training.train_state import TrainState
 import distrax
 import chex
-import pickle
 import jax.lax as lax
 
-# Placeholder imports (uncomment and adjust paths as needed)
+sys.path.append(os.path.join(os.path.dirname(__file__), 'envs'))
+print(jax.devices())
+jax.config.update("jax_default_device", jax.devices()[0])
+print("JaX backend: ", jax.default_backend())
+
 from envs.utils.wrappers import VecEnv, LogWrapper
 from envs.single_rydberg_env import RydbergEnv
 from envs.single_stirap_env import SimpleStirap
@@ -40,20 +40,20 @@ from envs.multistep_stirap_env import MultiStirap
 from envs.single_rydberg_two_photon_env import RydbergTwoEnv
 from envs.single_transmon_reset_env import TransmonResetEnv
 from env_configs.configs import get_plot_elem_names, get_simple_stirap_params, get_multi_stirap_params, get_rydberg_cz_params, get_rydberg_two_params, get_transmon_reset_params
-import matplotlib.pyplot as plt
-import argparse
 
 # Check if GPU is available
 if ("cuda" in str(jax.devices())) or ("Cuda" in str(jax.devices())):
     print("Connected to a GPU")
     processor = "gpu"
     default_dtype = jnp.float32
+    default_int = jnp.int32
 else:
     jax.config.update("jax_platform_name", "cpu")
     print("Not connected to a GPU")
     jax.config.update("jax_enable_x64", True)
     processor = "cpu"
     default_dtype = jnp.float64
+    default_int = jnp.int64
 
 # Placeholder for envs_class_dict (adjust as needed)
 envs_class_dict = {
@@ -63,7 +63,6 @@ envs_class_dict = {
     "rydberg_two": RydbergTwoEnv,
     "transmon_reset": TransmonResetEnv,
 }
-
 
 class Transition(NamedTuple):
     done: jnp.ndarray
@@ -146,13 +145,13 @@ class ReplayBufferState:
 def init_replay_buffer(buffer_size: int, obs_shape: tuple,
                        action_shape: tuple) -> ReplayBufferState:
     return ReplayBufferState(obs=jnp.zeros((buffer_size, ) + obs_shape,
-                                           dtype=jnp.float32),
+                                           dtype=default_dtype),
                              actions=jnp.zeros((buffer_size, ) + action_shape,
-                                               dtype=jnp.float32),
+                                               dtype=default_dtype),
                              rewards=jnp.zeros((buffer_size, ),
-                                               dtype=jnp.float32),
+                                               dtype=default_dtype),
                              next_obs=jnp.zeros((buffer_size, ) + obs_shape,
-                                                dtype=jnp.float32),
+                                                dtype=default_dtype),
                              dones=jnp.zeros((buffer_size, ), dtype=jnp.bool_),
                              position=jnp.array(0, dtype=jnp.int32),
                              full=jnp.array(False, dtype=jnp.bool_),
@@ -182,14 +181,17 @@ def add_to_buffer(buffer_state: ReplayBufferState,
 @partial(jax.jit, static_argnums=(2, ))
 def sample_from_buffer(buffer_state: ReplayBufferState, rng: chex.PRNGKey,
                        batch_size: int) -> Transition:
-    current_size = jax.lax.cond(buffer_state.full, lambda: buffer_state.size,
-                                lambda: buffer_state.position)
+    current_size = jax.lax.cond(
+        buffer_state.full,
+        lambda: jnp.asarray(buffer_state.size, dtype=default_int),
+        lambda: jnp.asarray(buffer_state.position, dtype=default_int)
+    )
     indices = jax.random.randint(rng, (batch_size, ), 0, current_size)
     return Transition(done=buffer_state.dones[indices],
                       action=buffer_state.actions[indices],
-                      value=jnp.zeros((batch_size, ), dtype=jnp.float32),
+                      value=jnp.zeros((batch_size, ), dtype=default_dtype),
                       reward=buffer_state.rewards[indices],
-                      log_prob=jnp.zeros((batch_size, ), dtype=jnp.float32),
+                      log_prob=jnp.zeros((batch_size, ), dtype=default_dtype),
                       obs=buffer_state.obs[indices],
                       info={},
                       next_obs=buffer_state.next_obs[indices])
@@ -287,6 +289,7 @@ def ddpg_make_train(config):
             buffer_state=buffer_state)
 
         def _update_step(runner_state, unused):
+
             def _env_step(runner_state, unused):
                 train_state = runner_state
                 rng = train_state.rng
@@ -403,6 +406,8 @@ def ddpg_make_train(config):
 
                 def callback(infos):
                     info, loss_info, step = infos
+                    # Make sure loss_info is correctly unpacked
+                    critic_loss_value, actor_loss_value = loss_info
                     timesteps = (info["timestep"][info["returned_episode"]] *
                                  config["NUM_ENVS"])
                     if step % config["LOG_FREQ"] != 0:
@@ -422,10 +427,8 @@ def ddpg_make_train(config):
                         f"max_fidelity": max_fidelity,
                         f"min_fidelity": min_fidelity,
                         f"std_fidelity": std_fidelity,
-                        f"total_loss": jnp.mean(jnp.ravel(loss_info[0])),
-                        f"value_loss": jnp.mean(jnp.ravel(loss_info[1][0])),
-                        f"actor_loss": jnp.mean(jnp.ravel(loss_info[1][1])),
-                        f"entropy": jnp.mean(jnp.ravel(loss_info[1][2])),
+                         "critic_loss": jnp.mean(jnp.ravel(critic_loss_value)),
+                        "actor_loss": jnp.mean(jnp.ravel(actor_loss_value)),
                     }
 
                     if (wandb.run and timestep %
@@ -793,7 +796,7 @@ if __name__ == "__main__":
         "ENV_NAME": "simple_stirap",
         "ANNEAL_LR": False,
         "DEBUG": True,
-        "DEBUG_NOJIT": False,
+        "DEBUG_NOJIT": True,
         "LOGGING": True,
         "LOG_FREQ": 10,
         "LOG_WAND": False,

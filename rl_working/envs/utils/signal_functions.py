@@ -2,7 +2,14 @@ import jax.numpy as jnp
 from jax.scipy.integrate import trapezoid
 import jax
 import matplotlib.pyplot as plt
+import chex
 
+def default_kernel(window_length: int = 8) -> chex.Array:
+    return jnp.ones(window_length) / window_length
+
+def default_small_window(window_length: int = 8) -> chex.Array:
+    return jnp.linspace(-0.5 * (window_length - 1), 0.5 * (window_length - 1),
+                        window_length)
 
 def gen_gauss_kernel(window_length: int, gauss_mean=0.0, gauss_std=1):
     """generate gaussian kernel
@@ -11,18 +18,13 @@ def gen_gauss_kernel(window_length: int, gauss_mean=0.0, gauss_std=1):
     gauss_mean: mean of the gaussian
     gauss_std: standard deviation of the gaussian"""
 
-    small_window = jnp.linspace(
-        -0.5 * ((window_length) - 1),
-        0.5 * ((window_length) - 1),
-        window_length,
-    )
+    small_window = default_small_window(window_length)
     gauss_kernel = (1 / (jnp.sqrt(2 * jnp.pi) * gauss_std) *
                     jnp.exp(-((small_window - gauss_mean)**2) /
                             (2 * gauss_std**2)))
     gauss_kernel = gauss_kernel / jnp.sum(gauss_kernel)
 
     return gauss_kernel
-
 
 class SignalToolClass:
     def __init__(self, gauss_kernel_amp, gauss_kernel_freq, t_total, waveform):
