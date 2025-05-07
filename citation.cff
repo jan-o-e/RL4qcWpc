@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+title: "RL4qcWpc: Reinforcement Learning for Quantum Control with Physical Constraints"
+authors:
+  - family-names: Ernst
+    given-names: Jan Ole
+  - family-names: Chatterjee
+    given-names: Aniket
+  - family-names: Franzmeyer
+    given-names: Tim
+date-released: 2025-01-25
+version: "0.1.0"
+url: https://arxiv.org/abs/2501.14372
+archive: arXiv
+eprint: 2501.14372
+repository-code: https://github.com/jan-o-e/RL4qcWpc
+keywords:
+  - rl
+  - quantum
+license: MIT
