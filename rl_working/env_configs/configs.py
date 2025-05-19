@@ -33,8 +33,8 @@ def get_plot_elem_names(env_name):
         "transmon_reset": [
             "freq",
             "amp",
-            #"noise-amp",
-            #"noise-freq",
+            "noise-amp",
+            "noise-freq",
         ],
     }
 
@@ -165,4 +165,5 @@ def get_transmon_reset_params(args):
         "k_factor": -0.001,
         "max_deviation": 0.2,
         "max_steps": args.mxstep_solver,
+        "gauss_std":args.kernel_std_amp,
     }

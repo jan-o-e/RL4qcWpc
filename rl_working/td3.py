@@ -631,41 +631,10 @@ def td3_make_train(config):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    #HYPERPARAMETERS
     parser.add_argument("--seed",
                         type=int,
                         default=10,
                         help="Initial seed for the run")
-
-    parser.add_argument("--lr", type=float, default=5e-4, help="Learning rate")
-    parser.add_argument("--num_envs",
-                        type=int,
-                        default=16,
-                        help="Number of environments run in parallel")
-    parser.add_argument("--num_updates",
-                        type=int,
-                        default=5000,
-                        help="Number of updates to run")
-    parser.add_argument("--num_minibatches", type=int, default=4)
-    parser.add_argument("--clip_eps", type=float, default=0.2)
-    parser.add_argument("--ent_coef", type=float, default=0.0)
-    parser.add_argument("--max_grad_norm", type=float, default=0.5)
-    parser.add_argument("--layer_size", type=int, default=256)
-    parser.add_argument("--anneal_lr", type=int, default=0)
-
-    #CHOOSE ENVIRONMENT
-    parser.add_argument(
-        "--env",
-        choices=[
-            "multi_stirap",
-            "simple_stirap",
-            "rydberg",
-            "rydberg_two",
-            "transmon_reset",
-        ],
-        default="simple_stirap",
-        help="Environment to run",
-    )
 
     #NOISE PARAMS
     parser.add_argument(
@@ -878,7 +847,6 @@ if __name__ == "__main__":
         "DEBUG_NOJIT": False,  # Enable JIT for speed
         "LOGGING": True,
         "LOG_FREQ": 10,  # Log every 10 updates
-        "LOG_WAND": True,
         "LOG_WAND": False,
         "LOCAL_LOGGING": True,
         "LOCAL_SAVE_NAME": "ddpg",
@@ -930,13 +898,7 @@ if __name__ == "__main__":
     if config["DEBUG_NOJIT"]:
         jax.disable_jit(disable=True)
 
-    # config["NUM_ENVS"] = args.num_envs
-
-    # assert (config["NUM_MINIBATCHES"] *
-    #         config["MINIBATCH_SIZE"] == config["NUM_STEPS"] *
-    #         config["NUM_ENVS"])
-
-    seed = 20
+    seed = args.seed if args.seed else 0
 
     rng = jax.random.PRNGKey(seed)
     rng, _rng = jax.random.split(rng)
